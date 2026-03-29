@@ -15,12 +15,13 @@ Sistema de atualização automática para o software SIAP. Automatiza o processo
 
 ## 🛠️ Stack Tecnológico
 
-| Tecnologia | Descrição |
-|-----------|-----------|
+| Tecnologia | Uso |
+|-----------|-----|
 | Node.js | Runtime JavaScript |
 | Puppeteer | Automação de navegador headless |
+| dotenv | Gestão de variáveis de ambiente |
 | pkg | Empacotamento como executável .exe |
-| Winston | Sistema de logs |
+| Winston | Sistema de logs estruturados |
 
 ## ⚠️ Nota de Segurança
 
