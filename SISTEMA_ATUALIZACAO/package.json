@@ -1,0 +1,50 @@
+{
+  "name": "memory-multi-updater",
+  "version": "1.0.0",
+  "description": "Sistema de atualização automática dos módulos Memory Software",
+  "main": "src/index.js",
+  "bin": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "daemon": "node src/index.js --daemon",
+    "force": "node src/index.js --force",
+    "debug": "cross-env DEBUG=true node src/index.js",
+    "debug:daemon": "cross-env DEBUG=true node src/index.js --daemon",
+    "install:deps": "npm install --production",
+    "build": "node build.js"
+  },
+  "keywords": [
+    "memory",
+    "puppeteer",
+    "automation",
+    "updater"
+  ],
+  "author": "Memory Updater System",
+  "license": "ISC",
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "puppeteer": "^22.6.0",
+    "winston": "^3.13.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "pkg": {
+    "targets": [
+      "node18-win-x64"
+    ],
+    "assets": [
+      "node_modules/puppeteer/lib/**",
+      "node_modules/puppeteer-core/lib/**",
+      "node_modules/devtools-protocol/**"
+    ],
+    "scripts": [
+      "src/**/*.js"
+    ]
+  }
+}
