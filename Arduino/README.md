@@ -1,8 +1,14 @@
 # ⚡ Projetos Arduino
 
-**Stack:** `C++ · Arduino IDE · Microcontroladores`
+## 🛠️ Stack Tecnológico
 
-## Descrição
+| Tecnologia | Uso |
+|-----------|-----|
+| C++ | Linguagem principal dos sketches |
+| Arduino IDE | Ambiente de desenvolvimento |
+| Microcontroladores | Hardware (Arduino Uno, Nano, etc.) |
+
+## 📋 Descrição
 
 Coleção de projetos com microcontroladores Arduino: sensores, atuadores, automações e protótipos.
 
