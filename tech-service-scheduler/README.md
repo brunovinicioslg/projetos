@@ -15,13 +15,14 @@ Sistema web para agendamento e gestão de serviços técnicos. Interface moderna
 
 ## 🛠️ Stack Tecnológico
 
-| Tecnologia | Descrição |
-|-----------|-----------|
+| Tecnologia | Uso |
+|-----------|-----|
 | TypeScript | Linguagem principal |
 | React + Vite | Frontend SPA |
 | Supabase | Backend as a Service (PostgreSQL + Auth) |
-| shadcn/ui | Componentes de UI |
-| Tailwind CSS | Estilização |
+| Firebase | Notificações push (FCM) |
+| shadcn/ui + Tailwind CSS | UI e estilização |
+| React PDF Renderer | Geração de documentos PDF |
 
 ## ⚠️ Nota de Segurança
 
