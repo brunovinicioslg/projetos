@@ -16,14 +16,14 @@ Sistema ERP completo para a ACE/CDL de Lagoa Grande/MG. Gestão financeira, cada
 
 ## 🛠️ Stack Tecnológico
 
-| Tecnologia | Descrição |
-|-----------|-----------|
+| Tecnologia | Uso |
+|-----------|-----|
 | TypeScript | Linguagem principal |
 | NestJS | Framework backend (Node.js) |
-| PostgreSQL | Banco de dados |
+| PostgreSQL | Banco de dados relacional |
 | Prisma ORM | Mapeamento objeto-relacional |
-| JWT + Roles | Autenticação e autorização |
-| React | Frontend (separado) |
+| JWT + Passport | Autenticação e autorização |
+| PDFKit | Geração de relatórios em PDF |
 
 ## ⚠️ Nota de Segurança
 
