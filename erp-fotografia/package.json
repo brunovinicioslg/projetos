@@ -1,0 +1,17 @@
+{
+  "name": "erp-fotografa",
+  "version": "1.0.0",
+  "description": "ERP completo para estúdio fotográfico",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "deploy": "node scripts/deploy.js",
+    "backup": "node scripts/backup.js",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "private": true
+}
