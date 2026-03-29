@@ -1,0 +1,489 @@
+// ============================================================
+// SISTEMA ACE - Schema Prisma
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USUÁRIOS E PERFIS
+// ============================================================
+
+enum Role {
+  ADMIN
+  FINANCEIRO
+  ASSOCIADO
+  VISITANTE
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  password     String
+  name         String
+  role         Role       @default(ASSOCIADO)
+  associadoId  String?    @unique
+  refreshToken String?
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  associado    Associado? @relation(fields: [associadoId], references: [id])
+  logs         Log[]
+  vendasAvulsas VendaAvulsa[]
+  sangrias      Sangria[]
+
+  @@map("users")
+}
+
+// ============================================================
+// ASSOCIADOS
+// ============================================================
+
+enum SituacaoAssociado {
+  ATIVO
+  INATIVO
+}
+
+enum TipoCobrancaAssociado {
+  FIXA
+  VARIAVEL
+}
+
+model Associado {
+  id          String             @id @default(uuid())
+  nomeRazao   String
+  cpfCnpj     String             @unique
+  email       String?
+  telefone    String?
+  whatsapp    String?
+  endereco    String?
+  cidade      String?
+  estado      String?
+  cep         String?
+  dataAdesao  DateTime           @default(now())
+  situacao    SituacaoAssociado  @default(ATIVO)
+  categoria   String?
+  observacoes String?
+  contribuicaoId  String?
+  tipoCobranca    TipoCobrancaAssociado  @default(FIXA)
+  produtoFixoId   String?
+  deletedAt       DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  user            User?
+  cobrancas       Cobranca[]
+  inscricoes      Inscricao[]
+  vendas          Venda[]
+  vendasAvulsas   VendaAvulsa[]
+  contribuicao    Contribuicao?          @relation("AssociadoContribuicao", fields: [contribuicaoId], references: [id])
+  produtoFixo     Produto?               @relation("AssociadoProdutoFixo", fields: [produtoFixoId], references: [id])
+
+  @@index([cpfCnpj])
+  @@index([situacao])
+  @@index([deletedAt])
+  @@map("associados")
+}
+
+// ============================================================
+// FINANCEIRO
+// ============================================================
+
+enum TipoContribuicao {
+  MENSALIDADE
+  TAXA_EXTRA
+  OUTRO
+}
+
+model Contribuicao {
+  id             String           @id @default(uuid())
+  nome           String
+  tipo           TipoContribuicao
+  valorBase      Decimal          @db.Decimal(10, 2)
+  diaVencimento  Int              @default(10)
+  multaPercent   Decimal          @db.Decimal(5, 2) @default(2)
+  jurosPercent   Decimal          @db.Decimal(5, 2) @default(0.033)
+  ativo          Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  cobrancas      Cobranca[]
+  associados     Associado[]      @relation("AssociadoContribuicao")
+
+  @@map("contribuicoes")
+}
+
+enum StatusCobranca {
+  PENDENTE
+  PAGO
+  VENCIDO
+  CANCELADO
+  AGUARDANDO_VALOR
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  BOLETO
+  BOLETO_PARCELADO
+  TRANSFERENCIA
+  CHEQUE
+}
+
+model Cobranca {
+  id             String          @id @default(uuid())
+  associadoId    String
+  contribuicaoId String?
+  descricao      String
+  valor          Decimal         @db.Decimal(10, 2)
+  valorPago      Decimal?        @db.Decimal(10, 2)
+  valorProduto   Decimal?        @db.Decimal(10, 2)
+  vencimento     DateTime
+  pagamento      DateTime?
+  status         StatusCobranca  @default(PENDENTE)
+  observacoes    String?
+  boletoPath     String?
+  bancoId        String?
+  formaPagamento FormaPagamento?
+  deletedAt      DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  associado      Associado       @relation(fields: [associadoId], references: [id])
+  contribuicao   Contribuicao?   @relation(fields: [contribuicaoId], references: [id])
+  banco          Banco?          @relation(fields: [bancoId], references: [id])
+  payment        Payment?
+
+  @@index([associadoId])
+  @@index([status])
+  @@index([vencimento])
+  @@index([deletedAt])
+  @@map("cobrancas")
+}
+
+model Payment {
+  id             String   @id @default(uuid())
+  cobrancaId     String   @unique
+  provider       String?
+  transactionId  String?
+  paymentStatus  String?
+  qrCode         String?
+  linhaDigitavel String?
+  paymentLink    String?
+  webhookPayload Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  cobranca       Cobranca @relation(fields: [cobrancaId], references: [id])
+
+  @@map("payments")
+}
+
+// ============================================================
+// BANCOS E CAIXA
+// ============================================================
+
+enum TipoBanco {
+  CORRENTE
+  POUPANCA
+  INVESTIMENTO
+  CAIXA
+}
+
+model Banco {
+  id           String    @id @default(uuid())
+  nome         String
+  agencia      String?
+  conta        String?
+  tipo         TipoBanco @default(CORRENTE)
+  saldoInicial Decimal   @db.Decimal(10, 2) @default(0)
+  ativo        Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  cobrancas           Cobranca[]
+  vendas              Venda[]
+  vendasAvulsas       VendaAvulsa[]
+  inscricoes          Inscricao[]
+  parcelasInscricao   ParcelaInscricao[]
+  despesas            Despesa[]
+  sangriasOrigem      Sangria[]  @relation("SangriaOrigem")
+  sangriasDestino     Sangria[]  @relation("SangriaDestino")
+
+  @@map("bancos")
+}
+
+model Sangria {
+  id              String   @id @default(uuid())
+  valor           Decimal  @db.Decimal(10, 2)
+  descricao       String?
+  bancoOrigemId   String
+  bancoDestinoId  String
+  userId          String
+  data            DateTime @default(now())
+  createdAt       DateTime @default(now())
+  bancoOrigem     Banco    @relation("SangriaOrigem",  fields: [bancoOrigemId],  references: [id])
+  bancoDestino    Banco    @relation("SangriaDestino", fields: [bancoDestinoId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([bancoOrigemId])
+  @@index([bancoDestinoId])
+  @@index([data])
+  @@map("sangrias")
+}
+
+// ============================================================
+// LOGOS DO SISTEMA
+// ============================================================
+
+enum TipoLogo {
+  PRINCIPAL
+  SECUNDARIO
+}
+
+model Logo {
+  id        String    @id @default(uuid())
+  nome      String
+  path      String
+  tipo      TipoLogo  @default(SECUNDARIO)
+  ativo     Boolean   @default(true)
+  ordem     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("logos")
+}
+
+// ============================================================
+// EVENTOS
+// ============================================================
+
+model Evento {
+  id               String      @id @default(uuid())
+  nome             String
+  slug             String      @unique
+  descricao        String?
+  data             DateTime
+  horario          String?
+  local            String?
+  valorAssociado   Decimal     @db.Decimal(10, 2) @default(0)
+  valorVisitante   Decimal     @db.Decimal(10, 2) @default(0)
+  vagas            Int?
+  permitePagamento Boolean     @default(false)
+  cabecalho        String?
+  logoPath         String?
+  observacoes      String?
+  deletedAt        DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  inscricoes       Inscricao[]
+  despesas         Despesa[]
+
+  @@index([slug])
+  @@index([data])
+  @@index([deletedAt])
+  @@map("eventos")
+}
+
+enum TipoInscricao {
+  ASSOCIADO
+  VISITANTE
+}
+
+enum StatusInscricao {
+  PENDENTE
+  CONFIRMADO
+  CANCELADO
+}
+
+model Inscricao {
+  id                  String          @id @default(uuid())
+  eventoId            String
+  associadoId         String?
+  nomeVisitante       String?
+  cpfVisitante        String?
+  emailVisitante      String?
+  telefoneVisitante   String?
+  empresaVisitante    String?
+  tipo                TipoInscricao
+  status              StatusInscricao @default(PENDENTE)
+  presente            Boolean         @default(false)
+  valor               Decimal         @db.Decimal(10, 2) @default(0)
+  formaPagamento      FormaPagamento?
+  bancoId             String?
+  numeroParcelas      Int             @default(1)
+  valorPago           Decimal?        @db.Decimal(10, 2)
+  dataPagamento       DateTime?
+  observacoesPgto     String?
+  canceladoEm         DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  evento              Evento          @relation(fields: [eventoId], references: [id])
+  associado           Associado?      @relation(fields: [associadoId], references: [id])
+  banco               Banco?          @relation(fields: [bancoId], references: [id])
+  parcelas            ParcelaInscricao[]
+
+  @@index([eventoId])
+  @@index([associadoId])
+  @@index([status])
+  @@map("inscricoes")
+}
+
+enum StatusParcela {
+  PENDENTE
+  PAGO
+  VENCIDO
+  CANCELADO
+}
+
+model ParcelaInscricao {
+  id            String        @id @default(uuid())
+  inscricaoId   String
+  numeroParcela Int
+  valor         Decimal       @db.Decimal(10, 2)
+  vencimento    DateTime
+  status        StatusParcela @default(PENDENTE)
+  dataPagamento DateTime?
+  bancoId       String?
+  boletoPath    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  inscricao     Inscricao     @relation(fields: [inscricaoId], references: [id])
+  banco         Banco?        @relation(fields: [bancoId], references: [id])
+
+  @@index([inscricaoId])
+  @@index([status])
+  @@index([vencimento])
+  @@map("parcelas_inscricao")
+}
+
+// ============================================================
+// PRODUTOS
+// ============================================================
+
+model Produto {
+  id               String    @id @default(uuid())
+  nome             String
+  descricao        String?
+  valor            Decimal   @db.Decimal(10, 2)
+  estoque          Int       @default(0)
+  categoria        String?
+  ativo            Boolean   @default(true)
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  vendas           Venda[]
+  vendasAvulsasItens VendaAvulsaItem[]
+  associados       Associado[] @relation("AssociadoProdutoFixo")
+
+  @@index([deletedAt])
+  @@map("produtos")
+}
+
+model Venda {
+  id             String     @id @default(uuid())
+  produtoId      String
+  associadoId    String?
+  nomeComprador  String?
+  quantidade     Int
+  valorUnit      Decimal    @db.Decimal(10, 2)
+  valorTotal     Decimal    @db.Decimal(10, 2)
+  formaPagamento String?
+  bancoId        String?
+  createdAt      DateTime   @default(now())
+  produto        Produto    @relation(fields: [produtoId], references: [id])
+  associado      Associado? @relation(fields: [associadoId], references: [id])
+  banco          Banco?     @relation(fields: [bancoId], references: [id])
+
+  @@index([produtoId])
+  @@index([associadoId])
+  @@index([createdAt])
+  @@map("vendas")
+}
+
+// ============================================================
+// VENDAS AVULSAS (POS)
+// ============================================================
+
+model VendaAvulsa {
+  id             String         @id @default(uuid())
+  descricao      String?
+  associadoId    String?
+  nomeComprador  String?
+  formaPagamento FormaPagamento
+  bancoId        String?
+  total          Decimal        @db.Decimal(10, 2)
+  observacoes    String?
+  userId         String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  itens          VendaAvulsaItem[]
+  banco          Banco?         @relation(fields: [bancoId], references: [id])
+  associado      Associado?     @relation(fields: [associadoId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+
+  @@index([associadoId])
+  @@index([createdAt])
+  @@map("vendas_avulsas")
+}
+
+model VendaAvulsaItem {
+  id         String      @id @default(uuid())
+  vendaId    String
+  produtoId  String?
+  descricao  String
+  quantidade Int         @default(1)
+  valorUnit  Decimal     @db.Decimal(10, 2)
+  valorTotal Decimal     @db.Decimal(10, 2)
+  venda      VendaAvulsa @relation(fields: [vendaId], references: [id])
+  produto    Produto?    @relation(fields: [produtoId], references: [id])
+
+  @@map("vendas_avulsas_itens")
+}
+
+// ============================================================
+// DESPESAS
+// ============================================================
+
+model Despesa {
+  id             String          @id @default(uuid())
+  descricao      String
+  valor          Decimal         @db.Decimal(10, 2)
+  data           DateTime
+  categoria      String?
+  eventoId       String?
+  bancoId        String?
+  formaPagamento FormaPagamento?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  evento         Evento?         @relation(fields: [eventoId], references: [id])
+  banco          Banco?          @relation(fields: [bancoId], references: [id])
+
+  @@index([data])
+  @@index([eventoId])
+  @@map("despesas")
+}
+
+// ============================================================
+// AUDITORIA
+// ============================================================
+
+model Log {
+  id         String   @id @default(uuid())
+  userId     String
+  acao       String
+  entidade   String
+  entidadeId String
+  dados      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([entidade, entidadeId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("logs")
+}
