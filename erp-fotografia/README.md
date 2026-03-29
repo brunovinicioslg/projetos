@@ -16,17 +16,14 @@ Sistema ERP completo para gestão de estúdio fotográfico. Módulos de clientes
 
 ## 🛠️ Stack Tecnológico
 
-| Tecnologia | Descrição |
-|-----------|-----------|
+| Tecnologia | Uso |
+|-----------|-----|
 | Node.js + Express | API REST backend |
-| Prisma ORM | Mapeamento objeto-relacional |
-| PostgreSQL | Banco de dados |
 | React + Vite | Frontend SPA |
-| Tailwind CSS | Estilização |
-| JWT + bcryptjs | Autenticação |
-| PDFKit | Geração de PDFs |
-| Winston | Logs |
-| PWA | Instalável no dispositivo |
+| PostgreSQL | Banco de dados relacional |
+| Prisma ORM | Mapeamento objeto-relacional |
+| JWT + bcryptjs | Autenticação segura |
+| PDFKit | Geração de orçamentos em PDF |
 
 ## ⚠️ Nota de Segurança
 
